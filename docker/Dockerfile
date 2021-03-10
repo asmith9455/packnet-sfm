@@ -19,6 +19,11 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Set default shell to /bin/bash
 SHELL ["/bin/bash", "-cu"]
 
+RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends software-properties-common wget
+
+# RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-repo-ubuntu1804_10.1.243-1_amd64.deb
+# RUN dpkg -i cuda-repo-ubuntu1804_10.1.243-1_amd64.deb
+
 RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends \
     build-essential \
     cmake \
@@ -29,9 +34,6 @@ RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-
     vim \
     wget \
     ca-certificates \
-    libcudnn7=${CUDNN_VERSION} \
-    libnccl2=${NCCL_VERSION} \
-    libnccl-dev=${NCCL_VERSION} \
     libjpeg-dev \
     libpng-dev \
     python${PYTHON_VERSION} \
@@ -45,7 +47,20 @@ RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-
     bzip2 \
     htop \
     gnuplot \
-    ffmpeg
+    ffmpeg \
+    apt-utils
+
+# RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
+
+# RUN add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/ /"
+COPY ./docker/libcudnn7_7.6.5.32-1+cuda10.1_amd64.deb /tmp/libcudnn7_7.6.5.32-1+cuda10.1_amd64.deb
+# RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends \
+#     libcudnn8=8.0.5.39-1+cuda10.1
+#     # libcudnn7=${CUDNN_VERSION} \
+#     # libnccl2=${NCCL_VERSION} \
+#     # libnccl-dev=${NCCL_VERSION}
+
+RUN apt-get install /tmp/libcudnn7_7.6.5.32-1+cuda10.1_amd64.deb
 
 # Install Open MPI
 RUN mkdir /tmp/openmpi && \
@@ -89,6 +104,11 @@ RUN pip install torch==${PYTORCH_VERSION} \
     torchvision==${TORCHVISION_VERSION} && ldconfig
 
 # Install apex
+
+ENV HTTPS_PROXY=http://127.0.0.1:3128
+ENV HTTP_PROXY=http://127.0.0.1:3128
+ENV https_proxy=http://127.0.0.1:3128
+ENV http_proxy=http://127.0.0.1:3128
 RUN mkdir /workspace
 WORKDIR /workspace
 RUN git clone https://github.com/NVIDIA/apex.git
@@ -123,7 +143,7 @@ ENTRYPOINT ["/tini", "-g", "--"]
 
 # Install DGP (dataset utils)
 WORKDIR /workspace
-RUN git clone https://github.com/TRI-ML/dgp.git \
+RUN git clone https://github.com/asmith9455/dgp.git \
     && cd dgp \
     && pip3 install -r requirements.txt
 ENV PYTHONPATH="/workspace/dgp:$PYTHONPATH"

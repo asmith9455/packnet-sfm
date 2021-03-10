@@ -10,6 +10,7 @@ DOCKER_OPTS := \
 			--name ${PROJECT} \
 			--rm -it \
 			--shm-size=${SHMSIZE} \
+			--gpus 1	\
 			-e AWS_DEFAULT_REGION \
 			-e AWS_ACCESS_KEY_ID \
 			-e AWS_SECRET_ACCESS_KEY \
@@ -27,7 +28,7 @@ DOCKER_OPTS := \
 			-v ~/.aws:/root/.aws \
 			-v /root/.ssh:/root/.ssh \
 			-v ~/.cache:/root/.cache \
-			-v /data:/data \
+			-v ~/data:/data \
 			-v /mnt/fsx/:/mnt/fsx \
 			-v /dev/null:/dev/raw1394 \
 			-v /tmp:/tmp \
@@ -63,6 +64,7 @@ clean:
 
 docker-build:
 	docker build \
+		--network host \
 		-f docker/Dockerfile \
 		-t ${DOCKER_IMAGE} .
 
